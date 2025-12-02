@@ -47,45 +47,31 @@
             transition: width 0.4s var(--ease-expo), height 0.4s var(--ease-expo), border-color 0.3s;
         }
 
-        #starfield { position: fixed; inset: 0; z-index: 0; opacity: 0.6; pointer-events: none; }
+        /* CANVAS & VFX */
+        #starfield { position: fixed; inset: 0; z-index: 1; opacity: 1; pointer-events: none; }
         
-        /* Noise Overlay con mezcla sutil */
         .noise-overlay { 
-            position: fixed; inset: 0; pointer-events: none; z-index: 9998; 
+            position: fixed; inset: 0; pointer-events: none; z-index: 160; 
             opacity: 0.04; mix-blend-mode: overlay; 
         }
 
-        /* --- VFX LAYER --- */
         #vfx-layer {
-            position: fixed; inset: 0; pointer-events: none; z-index: 150;
+            position: fixed; inset: 0; pointer-events: none; z-index: 50;
             display: flex; align-items: center; justify-content: center;
         }
         
-        /* Efecto Día: Destello blanco central */
         .vfx-flash-day {
             position: absolute; width: 100vw; height: 100vh;
             background: radial-gradient(circle at center, rgba(255,255,255,1) 0%, rgba(255,255,255,0.2) 40%, transparent 70%);
             opacity: 0; transform: scale(0.5); mix-blend-mode: screen;
         }
 
-        /* Efecto Noche: Glow rojo perimetral */
         .vfx-glow-night {
             position: absolute; inset: 0;
-            background: radial-gradient(circle at center, transparent 30%, rgba(255, 0, 60, 0.5) 100%);
+            background: radial-gradient(circle at center, transparent 30%, rgba(255, 0, 60, 0.6) 100%);
             opacity: 0; mix-blend-mode: screen;
         }
         
-        /* Efecto Glitch Sutil */
-        .glitch-anim { animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite; }
-        @keyframes glitch-skew {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(-2px, -2px); }
-            60% { transform: translate(2px, 2px); }
-            80% { transform: translate(2px, -2px); }
-            100% { transform: translate(0); }
-        }
-
         /* --- PANTALLA START --- */
         #start-screen {
             position: fixed; inset: 0; z-index: 200;
@@ -103,10 +89,10 @@
         }
         .start-btn:hover { background: #fff; color: #000; transform: scale(1.05); }
 
-        /* --- INTRO LAYER (Escritorio por defecto) --- */
+        /* --- INTRO LAYER --- */
         #intro-layer {
             position: fixed; inset: 0; z-index: 100;
-            background: #000;
+            background: transparent;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             opacity: 0; pointer-events: none;
         }
@@ -149,6 +135,7 @@
             position: absolute; inset: 0; z-index: 10;
             display: flex; opacity: 0; visibility: hidden;
             width: 100%; height: 100%;
+            background: #000;
         }
 
         /* --- BARRA SUPERIOR --- */
@@ -160,6 +147,29 @@
         }
         .top-logo { height: 28px; width: auto; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.9; }
         .top-logo.arena { height: 36px; }
+
+        /* --- VOLUME CONTROL (NUEVO) --- */
+        .volume-control-container {
+            position: absolute; bottom: 30px; right: 30px; z-index: 100;
+            display: flex; align-items: center; gap: 10px;
+            font-family: 'Syne', sans-serif; font-size: 0.7rem; letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.5);
+            transition: opacity 0.5s ease;
+            cursor: pointer; /* Para que funcione el click */
+        }
+        .volume-control-container:hover { color: #fff; }
+        
+        input[type=range].vol-slider {
+            -webkit-appearance: none; width: 80px; height: 2px; background: rgba(255,255,255,0.2);
+            outline: none; cursor: pointer;
+        }
+        input[type=range].vol-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 10px; height: 10px; border-radius: 50%; background: #fff; cursor: pointer;
+        }
+        input[type=range].vol-slider::-moz-range-thumb {
+            width: 10px; height: 10px; border-radius: 50%; background: #fff; cursor: pointer; border: none;
+        }
 
         /* --- PANELES --- */
         .split-panel {
@@ -232,74 +242,32 @@
             body:has(.panel-night:hover) .panel-day { filter: brightness(0.2) blur(3px); pointer-events: none; }
         }
 
-        /* --- MOBILE STYLES (SOLUCIÓN DEFINITIVA DE POSICIONAMIENTO & FLEXBOX) --- */
+        /* --- MOBILE STYLES --- */
         @media (max-width: 900px) {
             body { overflow-x: hidden; overflow-y: hidden; height: 100dvh; cursor: auto; }
             .cursor-dot, .cursor-ring { display: none; }
+            .volume-control-container { bottom: 20px; right: 20px; }
             
             #intro-layer { 
-                /* Cambiamos a Flex Vertical para distribuir el espacio matemáticamente */
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between; /* Elementos arriba, centro y abajo */
-                align-items: center;
-                height: 100dvh; /* Altura real del viewport móvil */
-                width: 100vw;
-                padding: 40px 20px 60px 20px; /* Safe areas generosas */
+                display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+                height: 100dvh; width: 100vw; padding: 40px 20px 60px 20px;
             }
-            
-            /* Contenedor flexible para los elementos de la intro */
             .logos-wrapper { 
-                flex-direction: column;
-                justify-content: space-between; /* Reparte espacio entre logos */
-                align-items: center;
-                width: 100%;
-                height: 100%; /* Ocupa todo el contenedor flex */
-                margin: 0; padding: 0;
-                transform: none !important; /* Desactiva transformaciones que puedan desencajar */
-                opacity: 0; /* Controlado por GSAP */
+                flex-direction: column; justify-content: space-between; align-items: center;
+                width: 100%; height: 100%; margin: 0; padding: 0; transform: none !important; opacity: 0;
             }
-            
-            /* PAMESA (Parte Superior) */
-            .intro-logo-img.pamesa { 
-                width: 140px; 
-                position: relative; /* Ya no es absolute */
-                top: auto; left: auto; transform: none;
-                margin-top: 2vh;
-            }
-
-            /* SUBTÍTULOS (Centro visual) */
-            /* En móvil, los sacamos del flujo absoluto y los metemos en el flex o absolute centrado */
+            .intro-logo-img.pamesa { width: 140px; position: relative; margin-top: 2vh; }
             .subtitle-container {
-                position: absolute;
-                top: 50%; left: 50%;
-                transform: translate(-50%, -50%);
-                padding: 0 10px;
-                width: 90%;
-                height: auto;
-                z-index: 50;
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                padding: 0 10px; width: 90%; height: auto; z-index: 50;
             }
-
-            /* ROIG ARENA + FECHA (Parte Inferior - Agrupados) */
             .intro-bottom-group {
                 display: flex; flex-direction: column; align-items: center; gap: 30px;
                 width: 100%; margin-bottom: 2vh;
             }
-            
-            .intro-logo-img.arena { 
-                width: 200px; 
-                position: relative; top: auto; bottom: auto; left: auto; transform: none; margin: 0;
-            }
-            
-            .intro-date-wrapper { 
-                position: relative; 
-                margin-top: 0; top: auto; bottom: auto; 
-                height: 30px; width: 100%;
-            }
-
+            .intro-logo-img.arena { width: 200px; margin: 0; }
+            .intro-date-wrapper { position: relative; margin-top: 0; height: 30px; width: 100%; }
             .divider { display: none; }
-
-            /* APP PRINCIPAL */
             #main-app { position: fixed; inset: 0; flex-direction: column; height: 100dvh; }
             .top-bar { 
                 position: absolute; top: 0; left: 0; width: 100%; height: auto; min-height: 80px;
@@ -320,9 +288,14 @@
 </head>
 <body>
 
-    <!-- AUDIO -->
+    <!-- AUDIO 1: INTRODUCCIÓN -->
     <audio id="intro-audio" preload="auto">
         <source src="intro.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- AUDIO 2: MÚSICA TARJETAS (NUEVO) -->
+    <audio id="main-bgm" preload="auto" loop>
+        <source src="in-a-cloud-of-daydreams-lofi-288013.mp3" type="audio/mpeg">
     </audio>
 
     <div class="noise-overlay" style="background-image:url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.7\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E')"></div>
@@ -333,7 +306,10 @@
         <div class="vfx-glow-night"></div>
     </div>
 
+    <!-- CANVAS PARA EL FONDO -->
     <canvas id="starfield"></canvas>
+
+    <!-- CURSOR -->
     <div class="cursor-dot"></div>
     <div class="cursor-ring"></div>
 
@@ -347,28 +323,19 @@
         <button id="btn-start" class="start-btn" style="margin-top: 50px;">INICIAR EXPERIENCIA</button>
     </div>
 
-    <!-- INTRO ANIMADA (Estructura Híbrida Desktop/Mobile) -->
+    <!-- INTRO ANIMADA (Textos sobre el canvas) -->
     <section id="intro-layer">
-        <!-- Wrapper principal que en móvil es Flex Column -->
         <div class="logos-wrapper">
-            
-            <!-- Logo Arriba -->
             <img src="pamesa.svg" alt="PAMESA" class="intro-logo-img pamesa">
-            
             <div class="divider"></div>
-            
-            <!-- Contenedor Inferior para Móvil (Agrupa Logo 2 y Fecha) -->
             <div class="intro-bottom-group mobile-only-wrapper">
                 <img src="arena-logo.svg" alt="ROIG ARENA" class="intro-logo-img arena">
-                
                 <div class="intro-date-wrapper">
                     <div class="date-line date-1">05<span class="date-highlight">.</span>12<span class="date-highlight">.</span>2025</div>
                     <div class="date-line date-2" style="position:absolute; top:0; left:0; width:100%; opacity:0; transform:translateY(20px);">23<span class="date-highlight">.</span>02<span class="date-highlight">.</span>2026</div>
                 </div>
             </div>
         </div>
-        
-        <!-- Subtítulos (Absoluto al centro) -->
         <div class="subtitle-container">
             <span id="subtitle-text" class="subtitle-text"></span>
         </div>
@@ -379,6 +346,12 @@
         <div class="top-bar">
             <img src="pamesa.svg" alt="Pamesa" class="top-logo">
             <img src="arena-logo.svg" alt="Roig Arena" class="top-logo arena">
+        </div>
+
+        <!-- CONTROL DE VOLUMEN (NUEVO) -->
+        <div class="volume-control-container">
+            <span>MUSIC</span>
+            <input type="range" class="vol-slider" id="bgm-volume" min="0" max="1" step="0.01">
         </div>
 
         <a href="https://42562830.github.io/ceramica-experience-2026/" class="split-panel panel-day" id="day-panel" target="_blank">
@@ -415,29 +388,52 @@
     </main>
 
     <script>
-    // --- LÍNEA DE TIEMPO SINCRONIZADA ---
+    // --- CONFIGURACIÓN DE VOLUMEN ---
+    // Ajusta este valor (0.0 a 1.0) para cambiar el volumen máximo inicial
+    const MAX_MUSIC_VOLUME = 0.2; 
+
+    // --- LÓGICA DE ESTRELLAS Y TIMELINE ---
+    let starParams = { 
+        speed: 0, 
+        opacity: 0.9,
+        redMultiplier: 0, 
+        mode: 'float', 
+        warpStretch: 0,
+        shakeIntensity: 0
+    };
+
     const CUES = {
-        start: 0.5,        // "Hoy, 5 de diciembre..."
-        countdown: 3.5,    // "...comienza la cuenta atrás"
-        dateChange: 5.0,   // "El próximo lunes..." (CAMBIO FECHA)
-        history: 8.0,      // "...haremos historia"
-        middle: 11.0,      // "Materia de día" (FLASH)
-        night: 13.0,       // "...Estrellas de noche" (WARP)
-        end: 14.5,         // "Bienvenidos..."
-        liftCurtain: 17.5  // FINAL
+        start: 0.5,        
+        countdown: 3.5,    
+        dateChange: 5.0,   
+        history: 8.0,      
+        middle: 11.0,      
+        night: 13.0,       
+        end: 14.5,         
+        liftCurtain: 17.5  
     };
 
     const btnStart = document.getElementById('btn-start');
     const startScreen = document.getElementById('start-screen');
     const introLayer = document.getElementById('intro-layer');
-    const audio = document.getElementById('intro-audio');
+    const audioIntro = document.getElementById('intro-audio'); // Renombrado para claridad
+    const audioMain = document.getElementById('main-bgm'); // Nuevo audio
+    const volumeSlider = document.getElementById('bgm-volume'); // Slider
     const subtitleEl = document.getElementById('subtitle-text');
     let isStarted = false;
+
+    // Configuración inicial del Slider
+    volumeSlider.value = MAX_MUSIC_VOLUME;
+    volumeSlider.addEventListener('input', (e) => {
+        audioMain.volume = e.target.value;
+    });
+    // Evitar que el drag del slider interfiera con el cursor personalizado si quisieras,
+    // pero en este caso añadí pointer-events: auto en el CSS.
 
     const masterTl = gsap.timeline({ paused: true });
 
     function buildTimeline() {
-        // 1. INICIO (0.5s)
+        // 1. INICIO
         masterTl
             .set(introLayer, { opacity: 1, pointerEvents: 'auto' })
             .to('.logos-wrapper', { opacity: 1, scale: 1, duration: 2, ease: "expo.out" }, CUES.start)
@@ -445,41 +441,57 @@
             .to('.divider', { height: 60, duration: 1 }, "<")
             .call(() => setSubtitle("Hoy, 5 de diciembre... comienza la cuenta atrás."), null, CUES.start);
 
-        // 2. EFECTO "CUENTA ATRÁS" (3.5s) - Sutil temblor/glitch
+        // 2. CUENTA ATRÁS
+        masterTl.call(() => { starParams.mode = 'glitch'; }, null, CUES.countdown);
+        masterTl.to(starParams, { shakeIntensity: 8, duration: 1.4, ease: "power1.in" }, CUES.countdown);
         masterTl.call(() => {
-            gsap.fromTo('.logos-wrapper', { x: -2 }, { x: 2, duration: 0.05, repeat: 5, yoyo: true, ease: "none" });
-        }, null, CUES.countdown);
+            gsap.fromTo('.logos-wrapper', { x: -4 }, { x: 4, duration: 0.05, repeat: 8, yoyo: true, ease: "none" });
+        }, null, CUES.countdown + 0.5);
 
-        // 3. CAMBIO DE FECHA (5.0s) - Pulso de luz
+        // 3. EXPLOSIÓN / CAMBIO FECHA
+        masterTl.call(() => {
+            starParams.mode = 'warp'; 
+            setSubtitle("El próximo lunes, 23 de febrero de 2026... haremos historia.");
+        }, null, CUES.dateChange);
         masterTl
-            .call(() => setSubtitle("El próximo lunes, 23 de febrero de 2026... haremos historia."), null, CUES.dateChange)
-            .to('.date-1', { y: -20, opacity: 0, duration: 0.6, ease: "power2.in" }, CUES.dateChange)
-            .to('.date-2', { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }, CUES.dateChange + 0.2)
-            // Efecto sutil: Flash en el overlay de ruido
-            .to('.noise-overlay', { opacity: 0.2, duration: 0.1, yoyo: true, repeat: 1 }, CUES.dateChange);
+            .to(starParams, { speed: 300, warpStretch: 2.5, duration: 0.2, ease: "expo.in" }, CUES.dateChange)
+            .to('.date-1', { y: -20, opacity: 0, duration: 0.3, ease: "power2.in" }, CUES.dateChange)
+            .to('.date-2', { y: 0, opacity: 1, duration: 0.3, ease: "power2.out" }, CUES.dateChange + 0.1)
+            .to('.noise-overlay', { opacity: 0.5, duration: 0.1, yoyo: true, repeat: 3 }, CUES.dateChange);
 
-        // 4. "HAREMOS HISTORIA" (8.0s) - Zoom lento hacia atrás (Profundidad)
-        masterTl.to(starParams, { speed: 10, opacity: 0.4, duration: 3 }, CUES.history);
+        // 4. CRUCERO
+        masterTl.call(() => { starParams.mode = 'normal'; }, null, CUES.history);
+        masterTl.to(starParams, { speed: 8, opacity: 0.5, warpStretch: 0, duration: 2, ease: "power2.out" }, CUES.history);
 
-        // 5. EFECTO WOW 1: "Materia de día" (11.0s) - FLASH BLANCO
+        // 5. FLASH DÍA
         masterTl.call(() => setSubtitle("Materia de día... Estrellas de noche."), null, CUES.middle);
         masterTl.fromTo('.vfx-flash-day', 
             { opacity: 0, scale: 0.8 }, 
             { opacity: 1, scale: 1.5, duration: 0.2, ease: "expo.out" }, CUES.middle)
             .to('.vfx-flash-day', { opacity: 0, duration: 1.5, ease: "power2.out" }, CUES.middle + 0.2);
 
-        // 6. EFECTO WOW 2: "Estrellas de noche" (13.0s) - WARP ROJO + GLOW
+        // 6. WARP ROJO (Noche)
         masterTl.to('.vfx-glow-night', { opacity: 1, duration: 1.5, ease: "power2.inOut" }, CUES.night);
-        masterTl.to(starParams, { speed: 100, redMultiplier: 1.0, duration: 1.0, ease: "expo.in" }, CUES.night);
+        masterTl.to(starParams, { speed: 80, redMultiplier: 1.0, mode: 'warp', warpStretch: 0.5, duration: 1.0, ease: "expo.in" }, CUES.night);
 
-        // 7. FINAL: "Bienvenidos" (14.5s) - Calma antes de la explosión
+        // 7. FINAL (Ingravidez)
         masterTl.call(() => setSubtitle("Bienvenidos a la Experiencia Roig Arena."), null, CUES.end);
-        masterTl.to(starParams, { speed: -5, duration: 2, ease: "power2.out" }, CUES.end); // Estrellas flotan lento o retroceden sutilmente
+        masterTl.to(starParams, { speed: 0.5, mode: 'float', warpStretch: 0, duration: 2, ease: "power2.out" }, CUES.end);
 
-        // 8. TRANSICIÓN A APP (17.5s)
+        // --- TRANSICIÓN DE AUDIO ---
+        // 1 segundo antes de levantar el telón (CUES.liftCurtain - 1.0)
+        masterTl.call(() => {            
+            // Iniciar canción final (volumen 0 -> MAX)
+            audioMain.volume = 0;
+            audioMain.play().catch(e => console.log("Audio play err", e));
+            gsap.to(audioMain, { volume: parseFloat(volumeSlider.value), duration: 3, ease: "linear" });
+            
+        }, null, CUES.liftCurtain - 1.0);
+
+        // 8. TELÓN
         masterTl
             .to([subtitleEl, '.logos-wrapper', '.intro-date-wrapper'], { opacity: 0, duration: 0.5 }, CUES.liftCurtain - 0.5)
-            .to(starParams, { speed: 150, opacity: 0, duration: 0.8 }, CUES.liftCurtain - 0.8) // Zoom final
+            .to(starParams, { speed: 100, opacity: 0, duration: 0.8 }, CUES.liftCurtain - 0.8)
             .to(['#intro-layer', '#starfield', '#vfx-layer'], { opacity: 0, duration: 0.8, ease: "power2.inOut" }, CUES.liftCurtain)
             .set(['#intro-layer', '#starfield', '#vfx-layer'], { display: 'none' }) 
             .set('#main-app', { autoAlpha: 1, visibility: 'visible' }, CUES.liftCurtain)
@@ -497,18 +509,21 @@
     btnStart.addEventListener('click', () => {
         if (isStarted) return;
         isStarted = true;
+        starParams.mode = 'float';
+        starParams.speed = 0;
+        
         gsap.to(startScreen, { opacity: 0, duration: 0.5, onComplete: () => startScreen.style.display = 'none' });
-        audio.play().catch(e => console.log("Audio error:", e));
+        audioIntro.play().catch(e => console.log("Audio error:", e));
         buildTimeline();
         masterTl.play();
     });
 
+    // --- CÓDIGO DEL CANVAS Y CURSOR (SIN CAMBIOS) ---
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const canvas = document.getElementById('starfield');
     const ctx = canvas.getContext('2d');
     let width, height, stars = [];
-    let starParams = { speed: 20, opacity: 0.6, redMultiplier: 0 };
-
+    
     function resize() {
         width = window.innerWidth;
         height = window.innerHeight;
@@ -519,48 +534,59 @@
     resize();
 
     class Star {
-        constructor() {
+        constructor() { this.reset(); this.z = Math.random() * width; }
+        reset() {
             this.x = Math.random() * width - width / 2;
             this.y = Math.random() * height - height / 2;
-            this.z = Math.random() * width; 
-            this.opacity = Math.random();
+            this.z = width; this.baseX = this.x; this.baseY = this.y;
+            this.opacity = 0.5 + Math.random() * 0.5;
+            this.floatOffset = Math.random() * 100;
         }
-        update() {
-            this.z -= starParams.speed;
-            if (this.z <= 0) {
-                this.z = width;
-                this.x = Math.random() * width - width / 2;
-                this.y = Math.random() * height - height / 2;
-            }
-            if (this.z > width) { // Soporte para velocidad negativa (retroceso)
-                this.z = 1;
-                this.x = Math.random() * width - width / 2;
-                this.y = Math.random() * height - height / 2;
-            }
+        update(time) {
+            this.pz = this.z; this.z -= starParams.speed;
+            if (this.z <= 0) { this.reset(); this.pz = this.z; }
+            if (starParams.mode === 'float') {
+                this.x = this.baseX + Math.sin(time * 0.001 + this.floatOffset) * 2;
+                this.y = this.baseY + Math.cos(time * 0.0013 + this.floatOffset) * 2;
+            } else if (starParams.mode === 'glitch') {
+                if (Math.random() > 0.8) {
+                    this.x = this.baseX + (Math.random() - 0.5) * starParams.shakeIntensity;
+                    this.y = this.baseY + (Math.random() - 0.5) * starParams.shakeIntensity;
+                }
+            } else { this.x = this.baseX; this.y = this.baseY; }
         }
         draw() {
             if (starParams.opacity <= 0.01) return; 
             let x = (this.x / this.z) * width + width / 2;
             let y = (this.y / this.z) * height + height / 2;
-            let radius = (1 - this.z / width) * 2; 
-            if (radius < 0) radius = 0;
-            if (x < 0 || x > width || y < 0 || y > height) return;
-            
-            ctx.beginPath();
-            // Color logic: Red multiplier affects Green/Blue channels
             let g = 255 - (255 * starParams.redMultiplier); 
             let b = 255 - (195 * starParams.redMultiplier); 
-            
-            ctx.fillStyle = `rgba(255, ${g}, ${b}, ${this.opacity * starParams.opacity})`;
-            ctx.arc(x, y, radius, 0, Math.PI * 2);
-            ctx.fill();
+            let col = `rgba(255, ${Math.floor(g)}, ${Math.floor(b)}, ${this.opacity * starParams.opacity})`;
+
+            if (starParams.mode === 'warp' && starParams.speed > 10) {
+                let px = (this.x / this.pz) * width + width / 2;
+                let py = (this.y / this.pz) * height + height / 2;
+                ctx.beginPath(); ctx.strokeStyle = col;
+                ctx.lineWidth = (1 - this.z / width) * 2 * starParams.warpStretch + 0.5;
+                ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke();
+            } else {
+                let radius = (1 - this.z / width) * 2.5;
+                if (radius < 0) radius = 0;
+                if (x < 0 || x > width || y < 0 || y > height) return;
+                ctx.beginPath(); ctx.fillStyle = col;
+                ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+            }
         }
     }
-    for (let i = 0; i < 400; i++) stars.push(new Star());
+
+    for (let i = 0; i < 500; i++) stars.push(new Star()); 
+
+    let time = 0;
     function animateStars() {
-        if (starParams.opacity > 0) {
+        if (starParams.opacity > 0 || isStarted) {
             ctx.clearRect(0, 0, width, height);
-            stars.forEach(star => { star.update(); star.draw(); });
+            time += 16;
+            stars.forEach(star => { star.update(time); star.draw(); });
             requestAnimationFrame(animateStars);
         }
     }
