@@ -27,12 +27,12 @@
             color: #fff;
             font-family: 'Montserrat', sans-serif;
             margin: 0; padding: 0;
-            overflow: hidden; /* Evita scroll en la intro */
+            overflow: hidden;
             height: 100vh; width: 100vw;
             cursor: none;
         }
 
-        /* --- ELEMENTOS UI (CURSOR Y FONDO) --- */
+        /* --- UI ELEMENTS --- */
         .cursor-dot {
             position: fixed; top: 0; left: 0; width: 6px; height: 6px; 
             background: white; border-radius: 50%; pointer-events: none; z-index: 10000;
@@ -47,6 +47,26 @@
 
         #starfield { position: fixed; inset: 0; z-index: 0; opacity: 0.6; pointer-events: none; }
         .noise-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9998; opacity: 0.035; mix-blend-mode: overlay; }
+
+        /* --- VFX LAYER (NUEVO PARA EFECTOS) --- */
+        #vfx-layer {
+            position: fixed; inset: 0; pointer-events: none; z-index: 150;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        /* Efecto Día: Destello blanco central */
+        .vfx-flash-day {
+            position: absolute; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.1) 40%, transparent 70%);
+            opacity: 0; transform: scale(0.5); mix-blend-mode: screen;
+        }
+
+        /* Efecto Noche: Glow rojo perimetral */
+        .vfx-glow-night {
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at center, transparent 30%, rgba(255, 0, 60, 0.4) 100%);
+            opacity: 0; mix-blend-mode: screen;
+        }
 
         /* --- PANTALLA START --- */
         #start-screen {
@@ -77,6 +97,8 @@
             display: flex; align-items: center; justify-content: center; gap: 4vw;
             opacity: 0; transform: scale(1.05);
             width: 80%; max-width: 800px;
+            position: relative; 
+            z-index: 2;
         }
         
         .intro-logo-img { height: auto; filter: brightness(0) invert(1); object-fit: contain; }
@@ -89,6 +111,7 @@
             margin-top: 4vh; height: 30px; overflow: hidden; position: relative;
             font-family: 'Syne', sans-serif; font-weight: 700; letter-spacing: 0.4em; font-size: 0.9rem; color: #888;
             display: flex; flex-direction: column; align-items: center; opacity: 0;
+            z-index: 1;
         }
         .date-line { display: block; text-align: center; }
         .date-highlight { color: #ff003c; }
@@ -100,6 +123,7 @@
             font-size: clamp(1rem, 2.5vw, 1.4rem); letter-spacing: 0.05em;
             color: rgba(255,255,255,0.9);
             height: 60px; display: flex; justify-content: center; align-items: center;
+            z-index: 10;
         }
         .subtitle-text { opacity: 0; transform: translateY(10px); }
 
@@ -115,7 +139,7 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100px;
             padding: 0 4vw; display: flex; justify-content: space-between; align-items: center;
             z-index: 50; pointer-events: none; 
-            mix-blend-mode: exclusion; /* Solo en escritorio funciona bien */
+            mix-blend-mode: exclusion;
         }
         .top-logo { height: 28px; width: auto; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.9; }
         .top-logo.arena { height: 36px; }
@@ -191,78 +215,62 @@
             body:has(.panel-night:hover) .panel-day { filter: brightness(0.2) blur(3px); pointer-events: none; }
         }
 
-        /* --- MOBILE STYLES (CRÍTICO) --- */
+        /* --- MOBILE STYLES --- */
         @media (max-width: 900px) {
-            body { 
-                overflow-x: hidden; 
-                overflow-y: hidden; /* Forzamos a que no haya scroll extraño */
-                height: 100vh; 
-                cursor: auto; 
-            }
+            body { overflow-x: hidden; overflow-y: hidden; height: 100vh; cursor: auto; }
             .cursor-dot, .cursor-ring { display: none; }
             
-            #intro-layer { padding: 20px; }
-            .logos-wrapper { flex-direction: column; gap: 20px; }
-            .intro-logo-img.pamesa { width: 140px; }
-            .intro-logo-img.arena { width: 200px; } 
-            .divider { width: 40px; height: 1px; margin: 10px 0; }
+            #intro-layer { 
+                padding: 0; 
+                height: 100vh; 
+                width: 100vw;
+            }
             
-            /* APP LAYOUT */
-            #main-app { 
-                position: fixed; /* Fijo para que no lo empuje nada */
-                inset: 0; 
+            .logos-wrapper { 
                 flex-direction: column; 
+                margin: 0; padding: 0; width: 100%; height: 65vh; 
+                position: relative; 
             }
             
-            /* HEADER FIJO Y LIMPIO */
-            .top-bar { 
-                position: absolute; 
-                top: 0; 
-                left: 0;
-                width: 100%;
-                height: auto; 
-                min-height: 80px;
-                /* Espacio seguro + padding visual */
-                padding: max(20px, env(safe-area-inset-top)) 20px 20px 20px;
-                
-                /* Solución al "black band" */
-                background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 100%);
-                mix-blend-mode: normal; /* Desactiva exclusion */
-                z-index: 999; /* Por encima de todo */
-                align-items: flex-start;
-                pointer-events: none;
-            }
-            
-            .top-logo {
-                opacity: 1; 
-                filter: brightness(0) invert(1);
-                position: relative;
-                z-index: 1000;
+            .intro-logo-img.pamesa { 
+                width: 140px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); margin: 0; 
             }
 
-            /* TARJETAS AL 50% EXACTO */
-            .split-panel { 
-                flex: 1; /* Ocupan el 50% de la altura cada uno */
-                width: 100%; 
-                border-right: none; 
-                border-bottom: 1px solid rgba(255,255,255,0.1);
+            .intro-logo-img.arena { 
+                width: 200px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); margin: 0; 
             }
             
+            .divider { display: none; }
+            
+            .subtitle-container {
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                padding: 0 10px; width: 90%; z-index: 50;
+            }
+            
+            .intro-date-wrapper { 
+                position: absolute; bottom: 10vh; left: 0; width: 100%; margin: 0;
+            }
+
+            #main-app { position: fixed; inset: 0; flex-direction: column; }
+            .top-bar { 
+                position: absolute; top: 0; left: 0; width: 100%; height: auto; min-height: 80px;
+                padding: max(20px, env(safe-area-inset-top)) 20px 20px 20px;
+                background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 100%);
+                mix-blend-mode: normal; z-index: 999; align-items: flex-start; pointer-events: none;
+            }
+            .top-logo { opacity: 1; filter: brightness(0) invert(1); position: relative; z-index: 1000; }
+            .split-panel { flex: 1; width: 100%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
             .panel-video-container { filter: grayscale(20%) brightness(0.6); }
             .panel-content { padding: 0 15px; transform: translateY(0); opacity: 1; }
             .panel-title { font-size: 2.2rem; margin-bottom: 5px; }
-            .panel-desc { display: none; /* Ocultar descripción larga en móvil para ahorrar espacio si es necesario, o reducir */ font-size: 0.85rem; margin-bottom: 20px; }
+            .panel-desc { display: none; }
             .cta-btn { padding: 12px 25px; font-size: 0.65rem; background: rgba(255,255,255,0.15); }
-            
             #start-screen { background: rgba(0,0,0,0.98); }
         }
         
-        /* Ajuste para pantallas muy pequeñas */
         @media (max-width: 900px) and (max-height: 700px) {
-            .panel-eyebrow { margin-bottom: 10px; font-size: 0.6rem; padding: 4px 10px; }
-            .panel-subtitle-main { font-size: 1rem; margin-bottom: 10px; }
-            .cta-btn { padding: 10px 20px; }
-            .panel-desc { display: none; } /* Aseguramos que quepa todo */
+            .logos-wrapper { height: 75vh; }
+            .intro-date-wrapper { bottom: 5vh; }
         }
     </style>
 </head>
@@ -273,23 +281,26 @@
         <source src="intro.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- FONDO DE RUIDO (Siempre visible, sutil) -->
     <div class="noise-overlay" style="background-image:url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.7\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E')"></div>
     
-    <!-- ESTRELLAS (Se ocultarán tras la intro) -->
-    <canvas id="starfield"></canvas>
+    <!-- VFX CONTAINER (NUEVO) -->
+    <div id="vfx-layer">
+        <div class="vfx-flash-day"></div>
+        <div class="vfx-glow-night"></div>
+    </div>
 
+    <canvas id="starfield"></canvas>
     <div class="cursor-dot"></div>
     <div class="cursor-ring"></div>
 
     <!-- PANTALLA DE INICIO -->
     <div id="start-screen">
-        <div class="logos-wrapper" style="opacity:1; transform:scale(1); margin-bottom: 40px;">
-            <img src="pamesa.svg" alt="PAMESA" style="height:40px; filter:brightness(0) invert(1);">
-            <div style="width:1px; height:40px; background:#fff; margin:0 20px; opacity:0.5;"></div>
-            <img src="arena-logo.svg" alt="ROIG ARENA" style="height:50px; filter:brightness(0) invert(1);">
+        <div class="logos-wrapper" style="opacity:1; transform:scale(1); height: auto !important; position: relative !important; display: flex !important; flex-direction: column !important; gap: 40px !important; justify-content: center !important;">
+            <img src="pamesa.svg" alt="PAMESA" style="height:40px; position:static !important; transform:none !important; filter:brightness(0) invert(1);">
+            <div style="width:1px; height:40px; background:#fff; opacity:0.5; display: block;" class="divider-start"></div>
+            <img src="arena-logo.svg" alt="ROIG ARENA" style="height:50px; position:static !important; transform:none !important; filter:brightness(0) invert(1);">
         </div>
-        <button id="btn-start" class="start-btn">INICIAR EXPERIENCIA</button>
+        <button id="btn-start" class="start-btn" style="margin-top: 40px;">INICIAR EXPERIENCIA</button>
     </div>
 
     <!-- INTRO ANIMADA -->
@@ -300,43 +311,39 @@
             <img src="arena-logo.svg" alt="ROIG ARENA" class="intro-logo-img arena">
         </div>
         
+        <div class="subtitle-container">
+            <span id="subtitle-text" class="subtitle-text"></span>
+        </div>
+        
         <div class="intro-date-wrapper">
             <div class="date-line date-1">05<span class="date-highlight">.</span>12<span class="date-highlight">.</span>2025</div>
             <div class="date-line date-2" style="position:absolute; top:0; opacity:0; transform:translateY(20px);">23<span class="date-highlight">.</span>02<span class="date-highlight">.</span>2026</div>
-        </div>
-
-        <div class="subtitle-container">
-            <span id="subtitle-text" class="subtitle-text"></span>
         </div>
     </section>
 
     <!-- APP PRINCIPAL -->
     <main id="main-app">
-        <!-- Header -->
         <div class="top-bar">
             <img src="pamesa.svg" alt="Pamesa" class="top-logo">
             <img src="arena-logo.svg" alt="Roig Arena" class="top-logo arena">
         </div>
 
-        <!-- Panel Día -->
         <a href="https://42562830.github.io/ceramica-experience-2026/" class="split-panel panel-day" id="day-panel" target="_blank">
             <div class="panel-video-container">
                 <div class="video-wrapper-fix">
-                    <!-- Vimeo API habilitada -->
                     <iframe id="vimeo-day" class="video-iframe-bg" src="https://player.vimeo.com/video/1127141766?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&muted=1&background=1&playsinline=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture"></iframe>
                 </div>
             </div>
             <div class="panel-overlay"></div>
             <div class="panel-content">
                 <span class="panel-eyebrow">Evento de Día</span>
-                <h2 class="panel-title">Ceramica</h2>
+                <h2 class="panel-title">Cerámica</h2>
                 <span class="panel-subtitle-main">Experience</span>
-                <p class="panel-desc">La materia y el negocio se encuentran. Descubre el nuevo showroom y las colecciones.</p>
+                <p class="panel-desc">La materia y el negocio se encuentran. Descubre el nuevo showroom.</p>
                 <div class="cta-btn"><span>Acceder</span></div>
             </div>
         </a>
 
-        <!-- Panel Noche -->
         <a href="https://eventos.pamesagrupoempresarial.com/" class="split-panel panel-night" id="night-panel" target="_blank">
             <div class="panel-video-container">
                 <div class="video-wrapper-fix">
@@ -355,16 +362,14 @@
     </main>
 
     <script>
-    // --- TIMINGS (Sincronizados con el audio) ---
     const CUES = {
         start: 0.5,        
         dateChange: 5.0,   
-        middle: 11.0,      
+        middle: 11.0,      // Momento "Materia de día"
         end: 14.5,         
-        liftCurtain: 17.5 // Reducido para que sea más inmediato
+        liftCurtain: 17.5 
     };
 
-    // --- SETUP ---
     const btnStart = document.getElementById('btn-start');
     const startScreen = document.getElementById('start-screen');
     const introLayer = document.getElementById('intro-layer');
@@ -372,11 +377,9 @@
     const subtitleEl = document.getElementById('subtitle-text');
     let isStarted = false;
 
-    // --- TIMELINE ---
     const masterTl = gsap.timeline({ paused: true });
 
     function buildTimeline() {
-        // 1. Mostrar Intro
         masterTl
             .set(introLayer, { opacity: 1, pointerEvents: 'auto' })
             .to('.logos-wrapper', { opacity: 1, scale: 1, duration: 2, ease: "expo.out" }, CUES.start)
@@ -384,30 +387,52 @@
             .to('.intro-date-wrapper', { opacity: 1, duration: 1 }, "<+=0.5")
             .call(() => setSubtitle("Hoy, 5 de diciembre... comienza la cuenta atrás."), null, CUES.start);
 
-        // 2. Cambio Fecha
         masterTl
             .call(() => setSubtitle("El próximo lunes, 23 de febrero de 2026... haremos historia."), null, CUES.dateChange)
             .to('.date-1', { y: -20, opacity: 0, duration: 0.6, ease: "power2.in" }, CUES.dateChange)
             .to('.date-2', { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }, CUES.dateChange + 0.2);
 
-        // 3. Texto Medio
+        // --- MOMENTO ESPECTACULAR: "Materia de día" (CUES.middle) ---
+        // 1. Texto
         masterTl.call(() => setSubtitle("Materia de día... Estrellas de noche."), null, CUES.middle);
+        
+        // 2. Efecto DAY FLASH (Sincronizado EXACTO con "Materia")
+        // Destello de luz blanca desde el centro
+        masterTl.fromTo('.vfx-flash-day', 
+            { opacity: 0, scale: 0.5 }, 
+            { opacity: 1, scale: 1.5, duration: 0.3, ease: "expo.out" }, 
+            CUES.middle
+        )
+        .to('.vfx-flash-day', 
+            { opacity: 0, duration: 1.5, ease: "power2.out" }, 
+            CUES.middle + 0.3
+        );
 
-        // 4. Bienvenida
+        // --- MOMENTO ESPECTACULAR: "...Estrellas de noche" (Aprox 2s después) ---
+        // Calculamos el tiempo donde diría "Estrellas de noche" (CUES.middle + 2.0s)
+        const nightCue = CUES.middle + 2.0;
+
+        // 1. Efecto NIGHT GLOW & WARP
+        masterTl.to('.vfx-glow-night', { opacity: 1, duration: 1.5, ease: "power2.inOut" }, nightCue);
+        
+        // 2. Acelerar Estrellas (Warp Speed)
+        masterTl.to(starParams, { speed: 120, duration: 1.5, ease: "expo.in" }, nightCue);
+        
+        // 3. Cambiar color estrellas a rojizo sutilmente (Rojo Roig Arena)
+        masterTl.to(starParams, { redMultiplier: 1.0, duration: 0.5 }, nightCue);
+
+        // --- FIN INTRO ---
         masterTl.call(() => setSubtitle("Bienvenidos a la Experiencia Roig Arena."), null, CUES.end);
+        
+        // Desacelerar warp para la calma final antes de abrir
+        masterTl.to(starParams, { speed: 30, duration: 2, ease: "power2.out" }, CUES.end);
 
-        // 5. APERTURA (Corrección de retardo y espacio)
         masterTl
-            // Ocultar textos intro antes de levantar
             .to([subtitleEl, '.logos-wrapper', '.intro-date-wrapper'], { opacity: 0, duration: 0.5 }, CUES.liftCurtain - 0.5)
-            // Acelerar estrellas para efecto warp
             .to(starParams, { speed: 80, opacity: 0, duration: 1 }, CUES.liftCurtain - 1)
-            // Desvanecer el canvas de estrellas y la capa de intro (no animar height para evitar bugs móviles)
-            .to(['#intro-layer', '#starfield'], { opacity: 0, duration: 0.8, ease: "power2.inOut" }, CUES.liftCurtain)
-            // Activar la App inmediatamente
-            .set(['#intro-layer', '#starfield'], { display: 'none' }) 
+            .to(['#intro-layer', '#starfield', '#vfx-layer'], { opacity: 0, duration: 0.8, ease: "power2.inOut" }, CUES.liftCurtain)
+            .set(['#intro-layer', '#starfield', '#vfx-layer'], { display: 'none' }) 
             .set('#main-app', { autoAlpha: 1, visibility: 'visible' }, CUES.liftCurtain)
-            // Animación de entrada de paneles (rápida)
             .from('.split-panel', { y: "110%", duration: 1, ease: "expo.out", stagger: 0.1 }, CUES.liftCurtain)
             .to('.panel-content', { opacity: 1, y: 0, duration: 0.8, stagger: 0.1 }, "<+=0.3");
     }
@@ -422,23 +447,20 @@
     btnStart.addEventListener('click', () => {
         if (isStarted) return;
         isStarted = true;
-        // Ocultar botón start
         gsap.to(startScreen, { opacity: 0, duration: 0.5, onComplete: () => startScreen.style.display = 'none' });
-        
-        // Reproducir Audio
         audio.play().catch(e => console.log("Audio error:", e));
-        
-        // Iniciar Secuencia
         buildTimeline();
         masterTl.play();
     });
 
-    // --- ESTRELLAS (CANVAS) ---
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const canvas = document.getElementById('starfield');
     const ctx = canvas.getContext('2d');
     let width, height, stars = [];
-    let starParams = { speed: 20, opacity: 0.6 };
+    
+    // Parámetros dinámicos para controlar con GSAP
+    // redMultiplier 0 = estrellas blancas, 1 = estrellas tintadas de rojo
+    let starParams = { speed: 20, opacity: 0.6, redMultiplier: 0 };
 
     function resize() {
         width = window.innerWidth;
@@ -455,6 +477,7 @@
             this.y = Math.random() * height - height / 2;
             this.z = Math.random() * width; 
             this.opacity = Math.random();
+            this.baseColor = 255;
         }
         update() {
             this.z -= starParams.speed;
@@ -465,13 +488,20 @@
             }
         }
         draw() {
-            if (starParams.opacity <= 0.01) return; // Optimización
+            if (starParams.opacity <= 0.01) return; 
             let x = (this.x / this.z) * width + width / 2;
             let y = (this.y / this.z) * height + height / 2;
             let radius = (1 - this.z / width) * 2; 
             if (x < 0 || x > width || y < 0 || y > height) return;
+            
             ctx.beginPath();
-            ctx.fillStyle = `rgba(255,255,255, ${this.opacity * starParams.opacity})`;
+            // Lógica de color: Si redMultiplier es 0, es blanco (255,255,255).
+            // Si redMultiplier sube, Green y Blue bajan para hacerlas rojas/rosas.
+            // Pamesa Red es aprox 255, 0, 60.
+            let g = 255 - (255 * starParams.redMultiplier); // Baja a 0
+            let b = 255 - (195 * starParams.redMultiplier); // Baja a 60
+            
+            ctx.fillStyle = `rgba(255, ${g}, ${b}, ${this.opacity * starParams.opacity})`;
             ctx.arc(x, y, radius, 0, Math.PI * 2);
             ctx.fill();
         }
@@ -486,11 +516,9 @@
     }
     animateStars();
 
-    // --- CURSOR Y VÍDEO ---
     const dot = document.querySelector('.cursor-dot');
     const ring = document.querySelector('.cursor-ring');
     
-    // Solo activar cursor custom y eventos hover en Desktop
     if (!isTouch) {
         let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
         window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; gsap.to(dot, { x: mouseX, y: mouseY, duration: 0 }); });
@@ -508,7 +536,6 @@
         }
     }
 
-    // --- VIMEO API ---
     var iframeDay = document.querySelector('#vimeo-day');
     var iframeNight = document.querySelector('#vimeo-night');
     var playerDay = new Vimeo.Player(iframeDay);
@@ -521,7 +548,6 @@
         document.querySelector('.panel-night').addEventListener('mouseenter', () => playerNight.play());
         document.querySelector('.panel-night').addEventListener('mouseleave', () => playerNight.pause());
     } else {
-        // En móvil los videos están muted y autoplay por la URL, intentamos asegurar el play
         playerDay.ready().then(() => { playerDay.setVolume(0); playerDay.play(); }); 
         playerNight.ready().then(() => { playerNight.setVolume(0); playerNight.play(); }); 
     }
