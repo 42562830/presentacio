@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es" class="no-js">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>PAMESA | ROIG ARENA - PRESENTACIÓN</title>
+    
+    <!-- FUENTES PREMIUM -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- LIBRERÍAS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://player.vimeo.com/api/player.js"></script>
+    
+    <style>
+        :root {
+            --c-dark: #050505;
+            --c-accent-night: #ff003c;
+            --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        body {
+            background-color: var(--c-dark);
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0; padding: 0;
+            overflow: hidden;
+            height: 100vh; width: 100vw;
+            cursor: none;
+        }
+
+        /* --- UI ELEMENTS --- */
+        .cursor-dot {
+            position: fixed; top: 0; left: 0; width: 6px; height: 6px; 
+            background: white; border-radius: 50%; pointer-events: none; z-index: 10000;
+            mix-blend-mode: difference;
+        }
+        .cursor-ring {
+            position: fixed; top: 0; left: 0; width: 40px; height: 40px;
+            border: 1px solid rgba(255,255,255,0.3); border-radius: 50%;
+            pointer-events: none; z-index: 9999; transform: translate(-50%, -50%);
+            transition: width 0.4s var(--ease-expo), height 0.4s var(--ease-expo), border-color 0.3s;
+        }
+
+        #starfield { position: fixed; inset: 0; z-index: 0; opacity: 0.6; pointer-events: none; }
+        .noise-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9998; opacity: 0.035; mix-blend-mode: overlay; }
+
+        /* --- PANTALLA DE INICIO (BOTÓN) --- */
+        #start-screen {
+            position: fixed; inset: 0; z-index: 200;
+            background: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease;
+        }
+        
+        .start-btn {
+            background: transparent; border: 1px solid rgba(255,255,255,0.3);
+            color: #fff; padding: 20px 50px;
+            font-family: 'Syne', sans-serif; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.2em; cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+        .start-btn:hover { background: #fff; color: #000; border-color: #fff; transform: scale(1.05); }
+
+        /* --- INTRO LAYER --- */
+        #intro-layer {
+            position: fixed; inset: 0; z-index: 100;
+            background: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; /* Empieza invisible hasta que pulsas start */
+            pointer-events: none;
+        }
+        
+        .logos-wrapper {
+            display: flex; align-items: center; justify-content: center; gap: 4vw;
+            opacity: 0; transform: scale(1.05);
+            width: 80%; max-width: 800px;
+        }
+        
+        .intro-logo-img { height: auto; filter: brightness(0) invert(1); object-fit: contain; }
+        .intro-logo-img.pamesa { width: 160px; max-width: 25vw; }
+        .intro-logo-img.arena { width: 280px; max-width: 35vw; } 
+        
+        .divider { width: 1px; height: 0px; background: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.5); margin: 0 20px; }
+        
+        .intro-date-wrapper {
+            margin-top: 4vh; height: 30px; overflow: hidden; position: relative;
+            font-family: 'Syne', sans-serif; font-weight: 700; letter-spacing: 0.4em; font-size: 0.9rem; color: #888;
+            display: flex; flex-direction: column; align-items: center;
+            opacity: 0;
+        }
+        
+        .date-line { display: block; text-align: center; }
+        .date-highlight { color: #ff003c; }
+
+        /* --- SUBTÍTULOS --- */
+        .subtitle-container {
+            position: absolute; bottom: 15%; left: 0; width: 100%;
+            text-align: center; padding: 0 20px;
+            font-family: 'Montserrat', sans-serif; font-weight: 300;
+            font-size: clamp(1rem, 2.5vw, 1.4rem); letter-spacing: 0.05em;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            height: 60px; /* Espacio reservado */
+            display: flex; justify-content: center; align-items: center;
+        }
+        .subtitle-text { opacity: 0; transform: translateY(10px); }
+
+        /* --- MAIN APP --- */
+        #main-app {
+            position: absolute; inset: 0; z-index: 10;
+            display: flex; opacity: 0; visibility: hidden;
+        }
+
+        /* --- BARRA SUPERIOR (ESCRITORIO) --- */
+        .top-bar {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100px;
+            padding: 0 4vw; display: flex; justify-content: space-between; align-items: center;
+            z-index: 50; pointer-events: none; mix-blend-mode: exclusion;
+        }
+        .top-logo { height: 28px; width: auto; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.8; }
+        .top-logo.arena { height: 36px; }
+
+        /* --- PANELES --- */
+        .split-panel {
+            position: relative; flex: 1; height: 100%;
+            transition: flex 1s var(--ease-expo), filter 0.6s ease;
+            cursor: none; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-decoration: none; border-right: 1px solid rgba(255,255,255,0.05); background: #080808;
+        }
+        .split-panel:last-child { border-right: none; }
+        
+        .panel-video-container {
+            position: absolute; inset: 0; z-index: 0; overflow: hidden;
+            transition: transform 1.4s var(--ease-expo), filter 0.6s ease;
+            filter: grayscale(100%) brightness(0.4) contrast(1.1); 
+        }
+        .video-iframe-bg {
+            position: absolute; top: 50%; left: 50%; 
+            width: 177.77vh; height: 56.25vw; min-width: 100%; min-height: 100%;
+            transform: translate(-50%, -50%); pointer-events: none;
+        }
+        .panel-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.8)); z-index: 1; pointer-events: none; }
+        .panel-content {
+            position: relative; z-index: 20; text-align: center; padding: 0 40px; width: 100%; max-width: 650px;
+            display: flex; flex-direction: column; align-items: center; transform: translateY(40px); opacity: 0;
+        }
+        .panel-eyebrow {
+            display: inline-block; font-family: 'Montserrat', sans-serif; font-size: 0.75rem; letter-spacing: 0.3em;
+            margin-bottom: 25px; text-transform: uppercase; color: rgba(255,255,255,0.7);
+            font-weight: 600; border: 1px solid rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 100px; backdrop-filter: blur(5px);
+        }
+        .panel-title {
+            font-family: 'Syne', sans-serif; font-weight: 800; text-transform: uppercase; color: #fff;
+            margin-bottom: 15px; line-height: 0.9; font-size: clamp(2.5rem, 4vw, 4.5rem); text-shadow: 0 20px 40px rgba(0,0,0,0.9);
+        }
+        .panel-subtitle-main {
+            font-family: 'Syne', sans-serif; font-weight: 600; font-size: clamp(1.2rem, 2vw, 2rem);
+            text-transform: uppercase; color: #fff; margin-bottom: 25px; display: block; letter-spacing: 0.05em;
+        }
+        .accent-text { color: var(--c-accent-night); }
+        .panel-desc {
+            font-family: 'Montserrat', sans-serif; font-size: 1rem; line-height: 1.6; color: #ddd; font-weight: 300;
+            margin-bottom: 45px; text-wrap: balance; max-width: 400px;
+        }
+        .cta-btn {
+            display: flex; align-items: center; gap: 10px; font-size: 0.75rem; letter-spacing: 0.2em; font-weight: 700;
+            padding: 18px 40px; border-radius: 2px; background: transparent; color: #fff;
+            border: 1px solid rgba(255,255,255,0.3); transition: all 0.4s var(--ease-expo); text-transform: uppercase;
+            position: relative; overflow: hidden;
+        }
+        .cta-btn::before {
+            content:''; position: absolute; inset: 0; background: #fff; 
+            transform: scaleX(0); transform-origin: left; transition: transform 0.4s var(--ease-expo); z-index: -1;
+        }
+
+        /* Hover States Desktop */
+        .panel-day:hover { flex: 1.6; }
+        .panel-day:hover .panel-video-container { filter: grayscale(0%) brightness(0.95); transform: scale(1.03); }
+        .panel-day:hover .cta-btn { border-color: #fff; color: #000; }
+        .panel-day:hover .cta-btn::before { transform: scaleX(1); }
+        body:has(.panel-day:hover) .panel-night { filter: brightness(0.2) blur(3px); pointer-events: none; }
+
+        .panel-night:hover { flex: 1.6; }
+        .panel-night:hover .panel-video-container { filter: grayscale(0%) brightness(0.95); transform: scale(1.03); }
+        .panel-night:hover .cta-btn { border-color: var(--c-accent-night); color: #fff; }
+        .panel-night:hover .cta-btn::before { background: var(--c-accent-night); transform: scaleX(1); }
+        body:has(.panel-night:hover) .panel-day { filter: brightness(0.2) blur(3px); pointer-events: none; }
+
+        /* --- MOBILE STYLES (CORREGIDO) --- */
+        @media (max-width: 900px) {
+            body { overflow-y: auto; overflow-x: hidden; height: auto; cursor: auto; }
+            .cursor-dot, .cursor-ring { display: none; }
+            #intro-layer { padding: 20px; }
+            .logos-wrapper { flex-direction: column; gap: 20px; }
+            .intro-logo-img.pamesa { width: 140px; }
+            .intro-logo-img.arena { width: 200px; } 
+            .divider { width: 40px; height: 1px; margin: 10px 0; }
+            
+            #main-app { position: relative; inset: auto; min-height: 100vh; flex-direction: column; }
+            
+            /* TOP BAR FIXED FOR MOBILE */
+            .top-bar { 
+                position: absolute; 
+                height: auto;
+                min-height: 80px;
+                padding: 20px;
+                /* Respetar área segura (Notch) */
+                padding-top: max(20px, env(safe-area-inset-top));
+                background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+                /* IMPORTANTE: Desactivar exclusion para que los logos se vean blancos sobre el degradado */
+                mix-blend-mode: normal; 
+                z-index: 100;
+                align-items: flex-start;
+            }
+            .top-logo {
+                opacity: 1; /* Asegurar visibilidad total */
+                filter: brightness(0) invert(1);
+            }
+
+            .split-panel { flex: none; height: 80vh; border-bottom: 1px solid rgba(255,255,255,0.1); width: 100%; border-right: none; }
+            .panel-video-container { filter: grayscale(20%) brightness(0.7); }
+            .panel-content { padding: 0 20px; transform: translateY(0); opacity: 1; }
+            .panel-title { font-size: 2.8rem; }
+            .cta-btn { padding: 15px 30px; background: rgba(255,255,255,0.1); }
+            
+            /* Disable hover effects on mobile */
+            .panel-day:hover, .panel-night:hover { flex: none; }
+            body:has(.panel-day:hover) .panel-night, body:has(.panel-night:hover) .panel-day { filter: none; }
+            #start-screen { background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- AUDIO -->
+    <audio id="intro-audio" preload="auto">
+        <source src="intro.mp3" type="audio/mpeg">
+        Tu navegador no soporta audio.
+    </audio>
+
+    <div class="noise-overlay" style="background-image:url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.7\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E')"></div>
+    <canvas id="starfield"></canvas>
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+
+    <!-- PANTALLA DE INICIO -->
+    <div id="start-screen">
+        <div class="logos-wrapper" style="opacity:1; transform:scale(1); margin-bottom: 40px;">
+            <img src="pamesa.svg" alt="PAMESA" style="height:40px; filter:brightness(0) invert(1);">
+            <div style="width:1px; height:40px; background:#fff; margin:0 20px; opacity:0.5;"></div>
+            <img src="arena-logo.svg" alt="ROIG ARENA" style="height:50px; filter:brightness(0) invert(1);">
+        </div>
+        <button id="btn-start" class="start-btn">INICIAR EXPERIENCIA</button>
+    </div>
+
+    <!-- INTRO ANIMADA -->
+    <section id="intro-layer">
+        <div class="logos-wrapper">
+            <img src="pamesa.svg" alt="PAMESA" class="intro-logo-img pamesa">
+            <h2 style="display:none;">PAMESA</h2>
+            <div class="divider"></div>
+            <img src="arena-logo.svg" alt="ROIG ARENA" class="intro-logo-img arena">
+            <h2 style="display:none;">ROIG ARENA</h2>
+        </div>
+        
+        <div class="intro-date-wrapper">
+            <div class="date-line date-1">05<span class="date-highlight">.</span>12<span class="date-highlight">.</span>2025</div>
+            <div class="date-line date-2" style="position:absolute; top:0; opacity:0; transform:translateY(20px);">23<span class="date-highlight">.</span>02<span class="date-highlight">.</span>2026</div>
+        </div>
+
+        <div class="subtitle-container">
+            <span id="subtitle-text" class="subtitle-text"></span>
+        </div>
+    </section>
+
+    <!-- APP PRINCIPAL -->
+    <main id="main-app">
+        <div class="top-bar">
+            <img src="pamesa.svg" alt="Pamesa" class="top-logo">
+            <img src="arena-logo.svg" alt="Roig Arena" class="top-logo arena">
+        </div>
+
+        <a href="https://42562830.github.io/ceramica-experience-2026/" class="split-panel panel-day" id="day-panel" target="_blank">
+            <div class="panel-video-container">
+                <div class="video-wrapper-fix">
+                    <iframe id="vimeo-day" class="video-iframe-bg" src="https://player.vimeo.com/video/1127141766?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&muted=1&background=1&playsinline=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture"></iframe>
+                </div>
+            </div>
+            <div class="panel-overlay"></div>
+            <div class="panel-content">
+                <span class="panel-eyebrow">Evento de Día</span>
+                <h2 class="panel-title">Ceramica</h2>
+                <span class="panel-subtitle-main">Experience</span>
+                <p class="panel-desc">La materia y el negocio se encuentran. Descubre el nuevo showroom y las colecciones que definirán el 2026.</p>
+                <div class="cta-btn"><span>Acceder al Showroom</span></div>
+            </div>
+        </a>
+
+        <a href="https://eventos.pamesagrupoempresarial.com/" class="split-panel panel-night" id="night-panel" target="_blank">
+            <div class="panel-video-container">
+                <div class="video-wrapper-fix">
+                    <iframe id="vimeo-night" class="video-iframe-bg" src="https://player.vimeo.com/video/1131758802?h=2548f4b6e9&autoplay=1&loop=1&muted=1&background=1&playsinline=1&autopause=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture"></iframe>
+                </div>
+            </div>
+            <div class="panel-overlay"></div>
+            <div class="panel-content">
+                <span class="panel-eyebrow" style="border-color:rgba(255,0,60,0.5); color:#ff8ea2;">Evento de Noche</span>
+                <h2 class="panel-title">Roig Arena</h2>
+                <span class="panel-subtitle-main accent-text">Noche de Estrellas</span>
+                <p class="panel-desc">Una celebración única. Música, espectáculo y gastronomía en el corazón del Arena.</p>
+                <div class="cta-btn"><span>Vivir la Noche</span></div>
+            </div>
+        </a>
+    </main>
+
+    <script>
+    // --- 1. CONFIGURACIÓN DE TIEMPOS ---
+    const CUES = {
+        start: 0.5,        
+        dateChange: 5.0,   
+        middle: 11.0,      
+        end: 14.5,         
+        liftCurtain: 18.0  
+    };
+
+    // --- 2. CONFIGURACIÓN INTERACTIVA ---
+    const btnStart = document.getElementById('btn-start');
+    const startScreen = document.getElementById('start-screen');
+    const introLayer = document.getElementById('intro-layer');
+    const audio = document.getElementById('intro-audio');
+    const subtitleEl = document.getElementById('subtitle-text');
+    let isStarted = false;
+
+    // --- 3. TIMELINE MAESTRO ---
+    const masterTl = gsap.timeline({ paused: true });
+
+    function buildTimeline() {
+        masterTl
+            .set(introLayer, { opacity: 1, pointerEvents: 'auto' })
+            .to('.logos-wrapper', { opacity: 1, scale: 1, duration: 2, ease: "expo.out" }, CUES.start)
+            .to('.divider', { height: 60, duration: 1 }, "<+=0.5")
+            .to('.intro-date-wrapper', { opacity: 1, duration: 1 }, "<+=0.5")
+            .call(() => setSubtitle("Hoy, 5 de diciembre... comienza la cuenta atrás."), null, CUES.start);
+
+        masterTl
+            .call(() => setSubtitle("El próximo lunes, 23 de febrero de 2026... haremos historia."), null, CUES.dateChange)
+            .to('.date-1', { y: -20, opacity: 0, duration: 0.6, ease: "power2.in" }, CUES.dateChange)
+            .to('.date-2', { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }, CUES.dateChange + 0.2);
+
+        masterTl
+            .call(() => setSubtitle("Materia de día... Estrellas de noche."), null, CUES.middle);
+
+        masterTl
+            .call(() => setSubtitle("Bienvenidos a la Experiencia Roig Arena."), null, CUES.end);
+
+        masterTl
+            .to(subtitleEl, { opacity: 0, duration: 1 }, CUES.liftCurtain - 1)
+            .to(['.logos-wrapper', '.intro-date-wrapper'], { y: -50, opacity: 0, duration: 1 }, CUES.liftCurtain - 0.5)
+            .to(starParams, { speed: 60, opacity: 0.2, duration: 1.5 }, CUES.liftCurtain - 1)
+            .to('#intro-layer', { height: 0, duration: 1.5, ease: "expo.inOut" }, CUES.liftCurtain)
+            .set('#main-app', { autoAlpha: 1, visibility: 'visible' }, CUES.liftCurtain)
+            .to(starParams, { speed: 0.5, opacity: 0.6, duration: 2 }, "+=0.1")
+            .from('.split-panel', { y: "100%", duration: 1.2, ease: "expo.out", stagger: 0.1 }, "-=1")
+            .to('.panel-content', { opacity: 1, y: 0, duration: 1, stagger: 0.2 }, "-=0.5");
+    }
+
+    function setSubtitle(text) {
+        gsap.to(subtitleEl, { opacity: 0, y: -10, duration: 0.3, onComplete: () => {
+            subtitleEl.innerHTML = text;
+            gsap.fromTo(subtitleEl, { y: 10 }, { opacity: 1, y: 0, duration: 0.5 });
+        }});
+    }
+
+    btnStart.addEventListener('click', () => {
+        if (isStarted) return;
+        isStarted = true;
+        gsap.to(startScreen, { opacity: 0, duration: 0.8, onComplete: () => startScreen.style.display = 'none' });
+        audio.play().catch(e => console.log("Audio error:", e));
+        buildTimeline();
+        masterTl.play();
+    });
+
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let width, height, stars = [];
+    let starParams = { speed: 20, opacity: 0.6 };
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Star {
+        constructor() {
+            this.x = Math.random() * width - width / 2;
+            this.y = Math.random() * height - height / 2;
+            this.z = Math.random() * width; 
+            this.opacity = Math.random();
+        }
+        update() {
+            this.z -= starParams.speed;
+            if (this.z <= 0) {
+                this.z = width;
+                this.x = Math.random() * width - width / 2;
+                this.y = Math.random() * height - height / 2;
+            }
+        }
+        draw() {
+            let x = (this.x / this.z) * width + width / 2;
+            let y = (this.y / this.z) * height + height / 2;
+            let radius = (1 - this.z / width) * 2; 
+            if (x < 0 || x > width || y < 0 || y > height) return;
+            ctx.beginPath();
+            ctx.fillStyle = `rgba(255,255,255, ${this.opacity * starParams.opacity})`;
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+    for (let i = 0; i < 400; i++) stars.push(new Star());
+    function animateStars() {
+        ctx.clearRect(0, 0, width, height);
+        stars.forEach(star => { star.update(); star.draw(); });
+        requestAnimationFrame(animateStars);
+    }
+    animateStars();
+
+    const dot = document.querySelector('.cursor-dot');
+    const ring = document.querySelector('.cursor-ring');
+    if (!isTouch) {
+        let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+        window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; gsap.to(dot, { x: mouseX, y: mouseY, duration: 0 }); });
+        gsap.ticker.add(() => { ringX += (mouseX - ringX) * 0.15; ringY += (mouseY - ringY) * 0.15; gsap.set(ring, { x: ringX, y: ringY }); });
+        
+        const dayPanel = document.querySelector('.panel-day');
+        if (dayPanel) {
+            dayPanel.addEventListener('mouseenter', () => document.body.classList.add('hover-day'));
+            dayPanel.addEventListener('mouseleave', () => document.body.classList.remove('hover-day'));
+        }
+        const nightPanel = document.querySelector('.panel-night');
+        if (nightPanel) {
+            nightPanel.addEventListener('mouseenter', () => document.body.classList.add('hover-night'));
+            nightPanel.addEventListener('mouseleave', () => document.body.classList.remove('hover-night'));
+        }
+    }
+
+    var iframeDay = document.querySelector('#vimeo-day');
+    var iframeNight = document.querySelector('#vimeo-night');
+    var playerDay = new Vimeo.Player(iframeDay);
+    var playerNight = new Vimeo.Player(iframeNight);
+
+    if (!isTouch) {
+        Promise.all([playerDay.ready(), playerNight.ready()]).then(() => { playerDay.pause(); playerNight.pause(); });
+        document.querySelector('.panel-day').addEventListener('mouseenter', () => playerDay.play());
+        document.querySelector('.panel-day').addEventListener('mouseleave', () => playerDay.pause());
+        document.querySelector('.panel-night').addEventListener('mouseenter', () => playerNight.play());
+        document.querySelector('.panel-night').addEventListener('mouseleave', () => playerNight.pause());
+    } else {
+        playerDay.ready().then(() => playerDay.setVolume(0)); 
+        playerNight.ready().then(() => playerNight.setVolume(0)); 
+    }
+    </script>
+</body>
+</html>
