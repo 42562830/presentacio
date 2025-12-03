@@ -28,8 +28,7 @@
             font-family: 'Montserrat', sans-serif;
             margin: 0; padding: 0;
             overflow: hidden;
-            height: 100vh; /* Fallback */
-            height: 100dvh; /* Móvil moderno */
+            height: 100vh; height: 100dvh;
             width: 100vw;
             cursor: none;
         }
@@ -48,11 +47,18 @@
         }
 
         /* CANVAS & VFX */
-        #starfield { position: fixed; inset: 0; z-index: 1; opacity: 1; pointer-events: none; }
+        #scene-container { position: fixed; inset: 0; z-index: 1; pointer-events: none; transform-origin: center center; }
+        #starfield { position: absolute; inset: 0; }
         
         .noise-overlay { 
             position: fixed; inset: 0; pointer-events: none; z-index: 160; 
-            opacity: 0.04; mix-blend-mode: overlay; 
+            opacity: 0.05; mix-blend-mode: overlay; 
+        }
+
+        /* Efectos de Pantalla Completa (Flashbangs) */
+        #flash-layer {
+            position: fixed; inset: 0; pointer-events: none; z-index: 150;
+            background: white; opacity: 0; mix-blend-mode: overlay;
         }
 
         #vfx-layer {
@@ -60,16 +66,31 @@
             display: flex; align-items: center; justify-content: center;
         }
         
+        /* Orbes ambientales */
         .vfx-flash-day {
-            position: absolute; width: 100vw; height: 100vh;
-            background: radial-gradient(circle at center, rgba(255,255,255,1) 0%, rgba(255,255,255,0.2) 40%, transparent 70%);
-            opacity: 0; transform: scale(0.5); mix-blend-mode: screen;
+            position: absolute; width: 120vw; height: 120vh;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.9) 0%, rgba(200,200,255,0.3) 30%, transparent 60%);
+            opacity: 0; transform: scale(0.5); mix-blend-mode: screen; filter: blur(20px);
         }
 
         .vfx-glow-night {
             position: absolute; inset: 0;
-            background: radial-gradient(circle at center, transparent 30%, rgba(255, 0, 60, 0.6) 100%);
-            opacity: 0; mix-blend-mode: screen;
+            background: radial-gradient(circle at center, transparent 20%, rgba(255, 0, 60, 0.4) 60%, rgba(255, 0, 60, 0.8) 100%);
+            opacity: 0; mix-blend-mode: hard-light;
+        }
+
+        /* GLITCH EFFECT (Clase controlada por JS) */
+        .chromatic-aberration {
+            animation: glitch-anim 0.2s cubic-bezier(.25, .46, .45, .94) both infinite;
+            filter: contrast(1.2) brightness(1.2);
+        }
+        @keyframes glitch-anim {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px); text-shadow: 2px 0 #ff003c, -2px 0 #00e5ff; }
+            40% { transform: translate(-2px, -2px); text-shadow: 3px 0 #ff003c, -3px 0 #00e5ff; }
+            60% { transform: translate(2px, 2px); text-shadow: 2px 0 #ff003c, -2px 0 #00e5ff; }
+            80% { transform: translate(2px, -2px); text-shadow: 2px 0 #ff003c, -2px 0 #00e5ff; }
+            100% { transform: translate(0) }
         }
         
         /* --- PANTALLA START --- */
@@ -95,6 +116,7 @@
             background: transparent;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             opacity: 0; pointer-events: none;
+            perspective: 1000px;
         }
         
         .logos-wrapper {
@@ -104,31 +126,36 @@
             position: relative; z-index: 2;
         }
         
-        .intro-logo-img { height: auto; filter: brightness(0) invert(1); object-fit: contain; }
+        .intro-logo-img { height: auto; filter: brightness(0) invert(1) drop-shadow(0 0 10px rgba(255,255,255,0.3)); object-fit: contain; }
         .intro-logo-img.pamesa { width: 160px; max-width: 25vw; }
         .intro-logo-img.arena { width: 280px; max-width: 35vw; } 
         
-        .divider { width: 1px; height: 0px; background: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.5); margin: 0 20px; }
+        .divider { width: 1px; height: 0px; background: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.8); margin: 0 20px; }
         
         .intro-date-wrapper {
-            margin-top: 4vh; height: 30px; overflow: hidden; position: relative;
-            font-family: 'Syne', sans-serif; font-weight: 700; letter-spacing: 0.4em; font-size: 0.9rem; color: #888;
+            margin-top: 4vh; height: 40px; overflow: hidden; position: relative;
+            font-family: 'Syne', sans-serif; font-weight: 700; letter-spacing: 0.4em; font-size: 1.1rem; color: #aaa;
             display: flex; flex-direction: column; align-items: center; opacity: 0;
-            z-index: 1;
+            z-index: 1; text-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
         .date-line { display: block; text-align: center; }
-        .date-highlight { color: #ff003c; }
+        .date-highlight { color: #ff003c; text-shadow: 0 0 10px #ff003c; }
 
         .subtitle-container {
             position: absolute; bottom: 15%; left: 0; width: 100%;
             text-align: center; padding: 0 20px;
             font-family: 'Montserrat', sans-serif; font-weight: 300;
-            font-size: clamp(1rem, 2.5vw, 1.4rem); letter-spacing: 0.05em;
-            color: rgba(255,255,255,0.9);
+            font-size: clamp(1rem, 2.5vw, 1.4rem); letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.95);
             height: 60px; display: flex; justify-content: center; align-items: center;
-            z-index: 10;
+            z-index: 10; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
-        .subtitle-text { opacity: 0; transform: translateY(10px); }
+        /* Clase para efecto cinematográfico en texto */
+        .subtitle-blur-in { animation: blurIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        @keyframes blurIn {
+            0% { opacity: 0; filter: blur(10px); transform: scale(1.1); }
+            100% { opacity: 1; filter: blur(0px); transform: scale(1); }
+        }
 
         /* --- MAIN APP (CONTENEDOR) --- */
         #main-app {
@@ -148,14 +175,14 @@
         .top-logo { height: 28px; width: auto; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.9; }
         .top-logo.arena { height: 36px; }
 
-        /* --- VOLUME CONTROL (NUEVO) --- */
+        /* --- VOLUME CONTROL --- */
         .volume-control-container {
             position: absolute; bottom: 30px; right: 30px; z-index: 100;
             display: flex; align-items: center; gap: 10px;
             font-family: 'Syne', sans-serif; font-size: 0.7rem; letter-spacing: 0.1em;
             color: rgba(255,255,255,0.5);
             transition: opacity 0.5s ease;
-            cursor: pointer; /* Para que funcione el click */
+            cursor: pointer;
         }
         .volume-control-container:hover { color: #fff; }
         
@@ -290,10 +317,10 @@
 
     <!-- AUDIO 1: INTRODUCCIÓN -->
     <audio id="intro-audio" preload="auto">
-        <source src="intro.mp3" type="audio/mpeg">
+        <source src="intro2.MP3" type="audio/mpeg">
     </audio>
 
-    <!-- AUDIO 2: MÚSICA TARJETAS (NUEVO) -->
+    <!-- AUDIO 2: MÚSICA TARJETAS -->
     <audio id="main-bgm" preload="auto" loop>
         <source src="in-a-cloud-of-daydreams-lofi-288013.mp3" type="audio/mpeg">
     </audio>
@@ -301,13 +328,16 @@
     <div class="noise-overlay" style="background-image:url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.7\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E')"></div>
     
     <!-- VFX CONTAINER -->
+    <div id="flash-layer"></div>
     <div id="vfx-layer">
         <div class="vfx-flash-day"></div>
         <div class="vfx-glow-night"></div>
     </div>
 
     <!-- CANVAS PARA EL FONDO -->
-    <canvas id="starfield"></canvas>
+    <div id="scene-container">
+        <canvas id="starfield"></canvas>
+    </div>
 
     <!-- CURSOR -->
     <div class="cursor-dot"></div>
@@ -348,7 +378,7 @@
             <img src="arena-logo.svg" alt="Roig Arena" class="top-logo arena">
         </div>
 
-        <!-- CONTROL DE VOLUMEN (NUEVO) -->
+        <!-- CONTROL DE VOLUMEN -->
         <div class="volume-control-container">
             <span>MUSIC</span>
             <input type="range" class="vol-slider" id="bgm-volume" min="0" max="1" step="0.01">
@@ -389,7 +419,6 @@
 
     <script>
     // --- CONFIGURACIÓN DE VOLUMEN ---
-    // Ajusta este valor (0.0 a 1.0) para cambiar el volumen máximo inicial
     const MAX_MUSIC_VOLUME = 0.2; 
 
     // --- LÓGICA DE ESTRELLAS Y TIMELINE ---
@@ -399,26 +428,31 @@
         redMultiplier: 0, 
         mode: 'float', 
         warpStretch: 0,
-        shakeIntensity: 0
+        shakeIntensity: 0,
+        cameraShake: 0
     };
 
+    // --- CUES SINCRONIZADOS AL AUDIO (ADELANTADOS PARA TEXTO Y VFX) ---
     const CUES = {
-        start: 0.5,        
-        countdown: 3.5,    
-        dateChange: 5.0,   
-        history: 8.0,      
-        middle: 11.0,      
-        night: 13.0,       
-        end: 14.5,         
-        liftCurtain: 17.5  
+        start: 0.1,        // Texto "Hoy..."
+        countdown: 3.0,    // Glitch "...cuenta atrás"
+        dateChange: 4.1,   // HIPERESPACIO: "El próximo lunes..."
+        impact: 5.3,       // FLASHBANG: "23 de febrero"
+        history: 8.5,      // Calma: "Haremos historia"
+        middle: 9.9,       // Flash Día: "Un evento único..."
+        night: 11.8,       // Warp Noche: "Una noche..."
+        end: 14.0,         // Ingravidez: "Bienvenidos..."
+        logoMove: 15.5,    // Logo se centra
+        zoomOut: 16.5,     // ZOOM FINAL (Nos traga)
+        liftCurtain: 17.5  // Telón arriba
     };
 
     const btnStart = document.getElementById('btn-start');
     const startScreen = document.getElementById('start-screen');
     const introLayer = document.getElementById('intro-layer');
-    const audioIntro = document.getElementById('intro-audio'); // Renombrado para claridad
-    const audioMain = document.getElementById('main-bgm'); // Nuevo audio
-    const volumeSlider = document.getElementById('bgm-volume'); // Slider
+    const audioIntro = document.getElementById('intro-audio');
+    const audioMain = document.getElementById('main-bgm');
+    const volumeSlider = document.getElementById('bgm-volume');
     const subtitleEl = document.getElementById('subtitle-text');
     let isStarted = false;
 
@@ -427,12 +461,13 @@
     volumeSlider.addEventListener('input', (e) => {
         audioMain.volume = e.target.value;
     });
-    // Evitar que el drag del slider interfiera con el cursor personalizado si quisieras,
-    // pero en este caso añadí pointer-events: auto en el CSS.
 
     const masterTl = gsap.timeline({ paused: true });
 
     function buildTimeline() {
+        // 0. PREPARACIÓN (Ocultar cursor)
+        document.body.classList.add('is-intro');
+
         // 1. INICIO
         masterTl
             .set(introLayer, { opacity: 1, pointerEvents: 'auto' })
@@ -441,69 +476,92 @@
             .to('.divider', { height: 60, duration: 1 }, "<")
             .call(() => setSubtitle("Hoy, 5 de diciembre... comienza la cuenta atrás."), null, CUES.start);
 
-        // 2. CUENTA ATRÁS
-        masterTl.call(() => { starParams.mode = 'glitch'; }, null, CUES.countdown);
-        masterTl.to(starParams, { shakeIntensity: 8, duration: 1.4, ease: "power1.in" }, CUES.countdown);
+        // 2. GLITCH
+        masterTl.call(() => { 
+            starParams.mode = 'glitch'; 
+            document.body.classList.add('chromatic-aberration');
+        }, null, CUES.countdown);
+        masterTl.to(starParams, { shakeIntensity: 15, cameraShake: 10, duration: 1.0, ease: "power1.in" }, CUES.countdown);
+        
+        // 3. HIPERESPACIO
         masterTl.call(() => {
-            gsap.fromTo('.logos-wrapper', { x: -4 }, { x: 4, duration: 0.05, repeat: 8, yoyo: true, ease: "none" });
-        }, null, CUES.countdown + 0.5);
-
-        // 3. EXPLOSIÓN / CAMBIO FECHA
-        masterTl.call(() => {
-            starParams.mode = 'warp'; 
+            document.body.classList.remove('chromatic-aberration');
+            starParams.mode = 'warp';
             setSubtitle("El próximo lunes, 23 de febrero de 2026... haremos historia.");
         }, null, CUES.dateChange);
+
+        masterTl.to(starParams, { speed: 400, warpStretch: 4.0, shakeIntensity: 0, cameraShake: 2, duration: 0.8, ease: "expo.in" }, CUES.dateChange);
+
+        // 4. IMPACTO FECHA
         masterTl
-            .to(starParams, { speed: 300, warpStretch: 2.5, duration: 0.2, ease: "expo.in" }, CUES.dateChange)
-            .to('.date-1', { y: -20, opacity: 0, duration: 0.3, ease: "power2.in" }, CUES.dateChange)
-            .to('.date-2', { y: 0, opacity: 1, duration: 0.3, ease: "power2.out" }, CUES.dateChange + 0.1)
-            .to('.noise-overlay', { opacity: 0.5, duration: 0.1, yoyo: true, repeat: 3 }, CUES.dateChange);
+            .set('#flash-layer', { opacity: 0.8 }, CUES.impact)
+            .to('#flash-layer', { opacity: 0, duration: 0.5 }, CUES.impact + 0.1)
+            .to(starParams, { cameraShake: 8, duration: 0.2 }, CUES.impact)
+            .to(starParams, { cameraShake: 0, duration: 0.5 }, CUES.impact + 0.3)
+            .to('.date-1', { y: -30, opacity: 0, duration: 0.2, ease: "power2.in" }, CUES.impact)
+            .to('.date-2', { y: 0, opacity: 1, scale: 1.3, color: '#fff', duration: 0.2, ease: "back.out(1.7)" }, CUES.impact)
+            .to('.date-2', { scale: 1, color: '#888', duration: 0.5 }, CUES.impact + 0.3);
 
-        // 4. CRUCERO
+        // 5. HISTORIA
         masterTl.call(() => { starParams.mode = 'normal'; }, null, CUES.history);
-        masterTl.to(starParams, { speed: 8, opacity: 0.5, warpStretch: 0, duration: 2, ease: "power2.out" }, CUES.history);
+        masterTl.to(starParams, { speed: 10, opacity: 0.5, warpStretch: 0, cameraShake: 0, duration: 2, ease: "power2.out" }, CUES.history);
 
-        // 5. FLASH DÍA
-        masterTl.call(() => setSubtitle("Materia de día... Estrellas de noche."), null, CUES.middle);
-        masterTl.fromTo('.vfx-flash-day', 
-            { opacity: 0, scale: 0.8 }, 
-            { opacity: 1, scale: 1.5, duration: 0.2, ease: "expo.out" }, CUES.middle)
-            .to('.vfx-flash-day', { opacity: 0, duration: 1.5, ease: "power2.out" }, CUES.middle + 0.2);
+        // 6. EVENTO ÚNICO
+        masterTl.call(() => setSubtitle("Un evento único... Una noche para el recuerdo."), null, CUES.middle);
+        masterTl.fromTo('.vfx-flash-day', { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1.8, duration: 0.3, ease: "expo.out" }, CUES.middle)
+            .to('.vfx-flash-day', { opacity: 0, duration: 1.2, ease: "power2.out" }, CUES.middle + 0.3);
 
-        // 6. WARP ROJO (Noche)
-        masterTl.to('.vfx-glow-night', { opacity: 1, duration: 1.5, ease: "power2.inOut" }, CUES.night);
-        masterTl.to(starParams, { speed: 80, redMultiplier: 1.0, mode: 'warp', warpStretch: 0.5, duration: 1.0, ease: "expo.in" }, CUES.night);
+        // 7. NOCHE
+        masterTl.to('.vfx-glow-night', { opacity: 0.8, duration: 0.5, ease: "power2.in" }, CUES.night);
+        masterTl.to(starParams, { speed: 120, redMultiplier: 1.0, mode: 'warp', warpStretch: 1.5, duration: 0.8, ease: "expo.in" }, CUES.night);
+        masterTl.to('#vfx-layer', { scale: 1.05, duration: 0.1, yoyo: true, repeat: 3 }, CUES.night);
 
-        // 7. FINAL (Ingravidez)
+        // 8. FINAL (BIENVENIDOS)
         masterTl.call(() => setSubtitle("Bienvenidos a la Experiencia Roig Arena."), null, CUES.end);
-        masterTl.to(starParams, { speed: 0.5, mode: 'float', warpStretch: 0, duration: 2, ease: "power2.out" }, CUES.end);
+        masterTl.to(starParams, { speed: 0.2, mode: 'float', warpStretch: 0, redMultiplier: 0, duration: 2, ease: "power2.out" }, CUES.end);
+        masterTl.to('.vfx-glow-night', { opacity: 0, duration: 2 }, CUES.end);
 
-        // --- TRANSICIÓN DE AUDIO ---
-        // 1 segundo antes de levantar el telón (CUES.liftCurtain - 1.0)
+        // --- FINAL ÉPICO ---
+        
+        // Limpieza y centrado
+        masterTl.to(['.intro-logo-img.pamesa', '.divider', '.intro-date-wrapper', '.subtitle-container'], 
+            { opacity: 0, duration: 1, ease: "power2.inOut" }, CUES.logoMove);
+        masterTl.to('.intro-logo-img.pamesa', { width: 0, margin: 0, padding: 0, duration: 1, ease: "expo.inOut" }, CUES.logoMove);
+        masterTl.to('.logos-wrapper', { gap: 0, duration: 1, ease: "expo.inOut" }, CUES.logoMove);
+        masterTl.to('.intro-logo-img.arena', { scale: 1.5, duration: 1.5, ease: "expo.inOut" }, CUES.logoMove);
+
+        // ZOOM FINAL + ACELERACIÓN DE ESTRELLAS (MEJORA)
+        masterTl.call(() => { starParams.mode = 'warp'; }, null, CUES.zoomOut);
+        masterTl.to('.intro-logo-img.arena', { scale: 80, opacity: 0, duration: 1.2, ease: "expo.in" }, CUES.zoomOut);
+        // ¡Las estrellas aceleran a lo bestia para acompañar el zoom!
+        masterTl.to(starParams, { speed: 2000, warpStretch: 6.0, duration: 1.2, ease: "expo.in" }, CUES.zoomOut);
+
+        // Flash blanco
+        masterTl.set('#flash-layer', { mixBlendMode: 'normal', background: 'white' }, CUES.zoomOut);
+        masterTl.to('#flash-layer', { opacity: 1, duration: 0.8, ease: "power2.in" }, CUES.zoomOut + 0.2);
+
+        // TRANSICIÓN AUDIO
         masterTl.call(() => {            
-            // Iniciar canción final (volumen 0 -> MAX)
             audioMain.volume = 0;
             audioMain.play().catch(e => console.log("Audio play err", e));
             gsap.to(audioMain, { volume: parseFloat(volumeSlider.value), duration: 3, ease: "linear" });
-            
         }, null, CUES.liftCurtain - 1.0);
 
-        // 8. TELÓN
+        // 9. APERTURA WEB (Devolver cursor)
         masterTl
-            .to([subtitleEl, '.logos-wrapper', '.intro-date-wrapper'], { opacity: 0, duration: 0.5 }, CUES.liftCurtain - 0.5)
-            .to(starParams, { speed: 100, opacity: 0, duration: 0.8 }, CUES.liftCurtain - 0.8)
-            .to(['#intro-layer', '#starfield', '#vfx-layer'], { opacity: 0, duration: 0.8, ease: "power2.inOut" }, CUES.liftCurtain)
-            .set(['#intro-layer', '#starfield', '#vfx-layer'], { display: 'none' }) 
+            .call(() => { document.body.classList.remove('is-intro'); }, null, CUES.liftCurtain) // Vuelve el cursor
+            .to('#flash-layer', { opacity: 0, duration: 1.0, ease: "power2.out" }, CUES.liftCurtain)
+            .set(['#intro-layer', '#scene-container', '#vfx-layer'], { display: 'none' }) 
             .set('#main-app', { autoAlpha: 1, visibility: 'visible' }, CUES.liftCurtain)
             .from('.split-panel', { y: "110%", duration: 1, ease: "expo.out", stagger: 0.1 }, CUES.liftCurtain)
             .to('.panel-content', { opacity: 1, y: 0, duration: 0.8, stagger: 0.1 }, "<+=0.3");
     }
 
     function setSubtitle(text) {
-        gsap.to(subtitleEl, { opacity: 0, y: -10, duration: 0.3, onComplete: () => {
-            subtitleEl.innerHTML = text;
-            gsap.fromTo(subtitleEl, { y: 10 }, { opacity: 1, y: 0, duration: 0.5 });
-        }});
+        subtitleEl.classList.remove('subtitle-blur-in');
+        void subtitleEl.offsetWidth; 
+        subtitleEl.innerHTML = text;
+        subtitleEl.classList.add('subtitle-blur-in');
     }
 
     btnStart.addEventListener('click', () => {
@@ -518,9 +576,10 @@
         masterTl.play();
     });
 
-    // --- CÓDIGO DEL CANVAS Y CURSOR (SIN CAMBIOS) ---
+    // --- CÓDIGO DEL CANVAS MEJORADO ---
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const canvas = document.getElementById('starfield');
+    const sceneContainer = document.getElementById('scene-container');
     const ctx = canvas.getContext('2d');
     let width, height, stars = [];
     
@@ -544,7 +603,11 @@
         }
         update(time) {
             this.pz = this.z; this.z -= starParams.speed;
-            if (this.z <= 0) { this.reset(); this.pz = this.z; }
+            
+            // Lógica para el efecto "Aspiradora" (speed negativo)
+            if (this.z > width * 1.5 && starParams.speed < 0) { this.z = 1; this.pz = this.z; }
+            if (this.z <= 0 && starParams.speed > 0) { this.reset(); this.pz = this.z; }
+            
             if (starParams.mode === 'float') {
                 this.x = this.baseX + Math.sin(time * 0.001 + this.floatOffset) * 2;
                 this.y = this.baseY + Math.cos(time * 0.0013 + this.floatOffset) * 2;
@@ -586,6 +649,16 @@
         if (starParams.opacity > 0 || isStarted) {
             ctx.clearRect(0, 0, width, height);
             time += 16;
+            
+            // Camera Shake en el Canvas
+            if (starParams.cameraShake > 0) {
+                const shakeX = (Math.random() - 0.5) * starParams.cameraShake;
+                const shakeY = (Math.random() - 0.5) * starParams.cameraShake;
+                sceneContainer.style.transform = `translate(${shakeX}px, ${shakeY}px)`;
+            } else {
+                sceneContainer.style.transform = 'translate(0,0)';
+            }
+
             stars.forEach(star => { star.update(time); star.draw(); });
             requestAnimationFrame(animateStars);
         }
